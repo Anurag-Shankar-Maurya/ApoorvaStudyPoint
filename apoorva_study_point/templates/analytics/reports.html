@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block title %}Analytics & Reports - Apoorva Study Point{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Analytics & Reports</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'export_attendance' %}" class="btn btn-outline-primary">
+                <i class="fas fa-download"></i> Export Attendance
+            </a>
+            <a href="{% url 'export_fees' %}" class="btn btn-outline-success">
+                <i class="fas fa-download"></i> Export Fees
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Student Attendance Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>STUDENT</th>
+                                <th>RECORDED SHIFTS</th>
+                                <th>PRESENT SHIFTS</th>
+                                <th>ATTENDANCE %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for summary in attendance_summary %}
+                            <tr>
+                                <td>{{ summary.student.name }}</td>
+                                <td>{{ summary.recorded_shifts }}</td>
+                                <td>{{ summary.present_shifts }}</td>
+                                <td>
+                                    <span class="badge {% if summary.attendance_percentage >= 90 %}bg-success{% elif summary.attendance_percentage >= 75 %}bg-warning{% else %}bg-danger{% endif %}">
+                                        {{ summary.attendance_percentage }}%
+                                    </span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">No attendance data available.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Student Fee Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>STUDENT</th>
+                                <th>TOTAL PAID</th>
+                                <th>CURRENT DUE</th>
+                                <th>STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for summary in fee_summary %}
+                            <tr>
+                                <td>{{ summary.student.name }}</td>
+                                <td class="fee-amount fee-paid">₹{{ summary.total_paid|floatformat:0 }}</td>
+                                <td class="fee-amount {% if summary.current_due > 0 %}fee-due{% else %}fee-paid{% endif %}">
+                                    ₹{{ summary.current_due|floatformat:0 }}
+                                </td>
+                                <td>
+                                    <span class="badge {% if summary.status == 'PAID' %}bg-success{% elif summary.status == 'OVERDUE' %}bg-danger{% else %}bg-warning{% endif %}">
+                                        {{ summary.student.get_fee_status_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">No fee data available.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5>Export Reports</h5>
+    </div>
+    <div class="card-body">
+        <p class="text-muted">
+            <strong>Note:</strong> Click the export buttons above to download detailed reports in CSV format.
+            These reports can be opened in Excel or other spreadsheet applications for further analysis.
+        </p>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <i class="fas fa-calendar-check fa-3x text-primary mb-3"></i>
+                        <h5>Attendance Report</h5>
+                        <p class="text-muted">Export detailed attendance records with student names, dates, shifts, and status.</p>
+                        <a href="{% url 'export_attendance' %}" class="btn btn-primary">
+                            <i class="fas fa-download"></i> Download Attendance
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <i class="fas fa-money-bill-wave fa-3x text-success mb-3"></i>
+                        <h5>Fee Report</h5>
+                        <p class="text-muted">Export detailed fee transaction records with payment amounts and dates.</p>
+                        <a href="{% url 'export_fees' %}" class="btn btn-success">
+                            <i class="fas fa-download"></i> Download Fees
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
