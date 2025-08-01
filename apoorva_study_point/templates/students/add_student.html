@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if object %}Edit{% else %}Add{% endif %} Student - Apoorva Study Point{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">{% if object %}Edit{% else %}Add New{% endif %} Student</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'student_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Students
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+
+                    {% if object %}
+                    <div class="row mt-4">
+                        <div class="col-md-4">
+                            <strong>Single Shift Fee Applied:</strong><br>
+                            ₹{{ object.single_shift_fee|floatformat:0 }}
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Discount Applied:</strong><br>
+                            ₹{{ object.discount_applied|floatformat:0 }}
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Total Due Amount:</strong><br>
+                            ₹{{ object.get_remaining_due|floatformat:0 }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% if object %}
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Student Summary</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Enrolled Date:</strong><br>{{ object.date_enrolled|date:"M d, Y" }}</p>
+                <p><strong>Total Paid:</strong><br>₹{{ object.get_total_paid|floatformat:0 }}</p>
+                <p><strong>Remaining Due:</strong><br>₹{{ object.get_remaining_due|floatformat:0 }}</p>
+                <p><strong>Fee Status:</strong><br>
+                    <span class="badge {% if object.fee_status == 'PAID' %}bg-success{% elif object.fee_status == 'OVERDUE' %}bg-danger{% else %}bg-warning{% endif %}">
+                        {{ object.get_fee_status_display }}
+                    </span>
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
