@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Apoorva Study Point{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Dashboard</h1>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">TOTAL STUDENTS</h5>
+                        <h2 class="mb-0">{{ total_students }}</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">TOTAL REVENUE COLLECTED</h5>
+                        <h2 class="mb-0">₹{{ total_revenue|floatformat:0 }}</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-money-bill-wave fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">TOTAL PENDING FEES</h5>
+                        <h2 class="mb-0">₹{{ total_pending|floatformat:0 }}</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Attendance Chart</h5>
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-secondary active" data-period="month">This Month</button>
+                    <button type="button" class="btn btn-outline-secondary" data-period="last30">Last 30 Days</button>
+                    <button type="button" class="btn btn-outline-secondary" data-period="year">This Year</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <canvas id="attendanceChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Fee Collection Chart</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="feeChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Initialize charts
+function initCharts() {
+    // Attendance Chart
+    const attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
+    const attendanceChart = new Chart(attendanceCtx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Present',
+                data: [],
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.1
+            }, {
+                label: 'Absent',
+                data: [],
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Fee Collection Chart
+    const feeCtx = document.getElementById('feeChart').getContext('2d');
+    const feeChart = new Chart(feeCtx, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Collection (₹)',
+                data: [],
+                backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Load chart data
+    loadAttendanceChart('month');
+    loadFeeChart();
+}
+
+function loadAttendanceChart(period) {
+    fetch(`/api/attendance/chart/?period=${period}`)
+        .then(response => response.json())
+        .then(data => {
+            const chart = Chart.getChart('attendanceChart');
+            chart.data.labels = data.labels;
+            chart.data.datasets[0].data = data.present;
+            chart.data.datasets[1].data = data.absent;
+            chart.update();
+        });
+}
+
+function loadFeeChart() {
+    fetch('/api/fee/chart/')
+        .then(response => response.json())
+        .then(data => {
+            const chart = Chart.getChart('feeChart');
+            chart.data.labels = data.data.map(item => item.month);
+            chart.data.datasets[0].data = data.data.map(item => item.collection);
+            chart.update();
+        });
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', initCharts);
+
+// Handle period buttons
+document.querySelectorAll('[data-period]').forEach(button => {
+    button.addEventListener('click', function() {
+        document.querySelectorAll('[data-period]').forEach(btn => btn.classList.remove('active'));
+        this.classList.add('active');
+        loadAttendanceChart(this.dataset.period);
+    });
+});
+</script>
+{% endblock %}
