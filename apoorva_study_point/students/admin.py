@@ -6,6 +6,7 @@ from .models import Student, Shift, Attendance, FeeTransaction, FeeConfiguration
 # Inline admin for UserProfile
 class UserProfileInline(admin.StackedInline):
     model = UserProfile
+    fk_name = 'user'
     can_delete = False
     verbose_name_plural = 'Profile'
 
