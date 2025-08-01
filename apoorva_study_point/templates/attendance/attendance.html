@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Attendance Management - Apoorva Study Point{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Attendance Management</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'mark_attendance' %}" class="btn btn-primary">
+                <i class="fas fa-check"></i> Mark Attendance
+            </a>
+            <a href="{% url 'bulk_attendance' %}" class="btn btn-success">
+                <i class="fas fa-users"></i> Bulk Attendance
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5>Mark Daily Attendance</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3" id="dateShiftForm">
+            <div class="col-md-3">
+                <label class="form-label">Select Date</label>
+                <input type="date" class="form-control" name="date" value="{{ selected_date }}" onchange="this.form.submit()">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Select Shift</label>
+                <select class="form-control" name="shift" onchange="this.form.submit()">
+                    <option value="">Choose Shift</option>
+                    {% for shift in shifts %}
+                    <option value="{{ shift.id }}" {% if shift.id|stringformat:"s" == selected_shift %}selected{% endif %}>
+                        {{ shift.get_name_display }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+
+        {% if selected_date and selected_shift %}
+        <div class="mt-4">
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>STUDENT NAME</th>
+                            <th>STATUS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="2" class="text-center text-muted">
+                                Use bulk attendance feature to mark attendance for multiple students at once.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5>Attendance Records</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3 mb-4">
+            <div class="col-md-3">
+                {{ filter_form.date_from|as_crispy_field }}
+            </div>
+            <div class="col-md-3">
+                {{ filter_form.date_to|as_crispy_field }}
+            </div>
+            <div class="col-md-2">
+                {{ filter_form.shift_filter|as_crispy_field }}
+            </div>
+            <div class="col-md-2">
+                {{ filter_form.student_filter|as_crispy_field }}
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <button type="submit" class="btn btn-outline-primary w-100">Filter</button>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>DATE</th>
+                        <th>SHIFT</th>
+                        <th>STUDENT NAME</th>
+                        <th>STATUS</th>
+                        <th>ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in attendance_records %}
+                    <tr>
+                        <td>{{ record.date|date:"M d, Y" }}</td>
+                        <td>{{ record.shift.get_name_display }}</td>
+                        <td>{{ record.student.name }}</td>
+                        <td>
+                            <span class="badge {% if record.status == 'PRESENT' %}bg-success{% elif record.status == 'LATE' %}bg-warning{% else %}bg-danger{% endif %}">
+                                {{ record.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{% url 'attendance_edit' record.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">
+                            No attendance records found for the selected filters.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
