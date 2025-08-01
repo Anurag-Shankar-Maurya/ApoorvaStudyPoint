@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Fee Management - Apoorva Study Point{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Fee Management</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'fee_add' %}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Record New Payment
+        </a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5>Fee Transaction Records</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3 mb-4">
+            <div class="col-md-3">
+                {{ filter_form.status_filter|as_crispy_field }}
+            </div>
+            <div class="col-md-3">
+                {{ filter_form.month_filter|as_crispy_field }}
+            </div>
+            <div class="col-md-3">
+                {{ filter_form.shift_filter|as_crispy_field }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <button type="submit" class="btn btn-outline-primary w-100">Filter</button>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>STUDENT NAME</th>
+                        <th>AMOUNT PAID</th>
+                        <th>REMAINING DUE</th>
+                        <th>PAYMENT DATE</th>
+                        <th>STATUS AFTER TXN</th>
+                        <th>ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                    <tr>
+                        <td>{{ transaction.student.name }}</td>
+                        <td class="fee-amount fee-paid">₹{{ transaction.amount_paid|floatformat:0 }}</td>
+                        <td class="fee-amount {% if transaction.remaining_due_after_payment > 0 %}fee-due{% else %}fee-paid{% endif %}">
+                            ₹{{ transaction.remaining_due_after_payment|floatformat:0 }}
+                        </td>
+                        <td>{{ transaction.payment_date|date:"M d, Y" }}</td>
+                        <td>
+                            <span class="badge {% if transaction.payment_status == 'COMPLETED' %}bg-success{% elif transaction.payment_status == 'PENDING' %}bg-warning{% else %}bg-danger{% endif %}">
+                                {{ transaction.get_payment_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'fee_edit' transaction.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'fee_delete' transaction.pk %}" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">
+                            No fee records found for the selected filters.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
